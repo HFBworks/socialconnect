@@ -1,0 +1,8 @@
+{
+  "name": "SocialConnect",
+  "description": "A production-ready full-stack social media application with real-time messaging, feed, and Telegram-style deletion.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

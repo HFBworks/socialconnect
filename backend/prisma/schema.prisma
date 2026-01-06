@@ -1,0 +1,145 @@
+// Production-ready Prisma schema for Social Media Application
+// Includes all models with proper relations, indexes, and cascading deletes
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with authentication fields
+model User {
+  id                String         @id @default(uuid())
+  email             String         @unique
+  password          String
+  name              String
+  isEmailVerified   Boolean        @default(false)
+  emailVerifyToken  String?        @unique
+  resetPasswordToken String?       @unique
+  resetPasswordExpires DateTime?
+  refreshToken      String?        @unique
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  lastSeenAt        DateTime?
+  
+  // Relations
+  posts             Post[]
+  likes             Like[]
+  comments          Comment[]
+  sentMessages      Message[]
+  reactions         Reaction[]
+  conversations     ConversationParticipant[]
+  
+  @@index([email])
+  @@index([emailVerifyToken])
+  @@index([resetPasswordToken])
+  @@index([refreshToken])
+}
+
+// Post model for social feed
+model Post {
+  id        String    @id @default(uuid())
+  content   String    @db.Text
+  imageUrl  String?
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+}
+
+// Like model with unique constraint
+model Like {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+// Comment model with cascading deletes
+model Comment {
+  id        String   @id @default(uuid())
+  content   String   @db.Text
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+}
+
+// Conversation model for one-to-one chats
+model Conversation {
+  id           String                    @id @default(uuid())
+  messages     Message[]
+  participants ConversationParticipant[]
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  
+  @@index([updatedAt(sort: Desc)])
+}
+
+// Many-to-many relation for conversation participants
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime     @default(now())
+  lastReadAt     DateTime?
+  
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+// Message model with edit tracking
+model Message {
+  id             String       @id @default(uuid())
+  content        String       @db.Text
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  reactions      Reaction[]
+  isEdited       Boolean      @default(false)
+  editedAt       DateTime?
+  createdAt      DateTime     @default(now())
+  
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt(sort: Desc)])
+}
+
+// Reaction model for message reactions
+model Reaction {
+  id        String   @id @default(uuid())
+  emoji     String   @db.VarChar(10)
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@index([userId])
+}
