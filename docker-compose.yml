@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL Database
   postgres:
@@ -24,6 +22,7 @@ services:
 
   # Backend API
   backend:
+    image: socialconnect-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -56,6 +55,7 @@ services:
 
   # Frontend
   frontend:
+    image: socialconnect-frontend:latest
     build:
       context: .
       dockerfile: frontend/Dockerfile

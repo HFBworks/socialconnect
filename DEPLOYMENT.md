@@ -36,10 +36,21 @@ Generate secure secrets with:
 openssl rand -hex 32
 ```
 
-### 3. Deploy with Docker Compose
+### 3. Build and Deploy with Docker Compose
 
+Build the Docker images:
+```bash
+docker-compose build
+```
+
+Then start all services:
 ```bash
 docker-compose up -d
+```
+
+Or do both in one command:
+```bash
+docker-compose up -d --build
 ```
 
 This will:
