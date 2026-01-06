@@ -3,12 +3,14 @@ node_modules
 npm-debug.log
 yarn-error.log
 
-# Environment files
+# Environment files (use build args instead)
 .env
 .env.local
 .env.*.local
+.env.production.example
+.env.example
 
-# Build outputs
+# Build outputs (will be generated in container)
 dist
 build
 .vite
@@ -16,6 +18,7 @@ build
 # Git
 .git
 .gitignore
+.github
 
 # IDE
 .vscode
@@ -35,11 +38,23 @@ logs
 # Testing
 coverage
 .nyc_output
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
 
 # Misc
 .cache
 temp
 tmp
+*.md
+!README.md
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
 
 # Backend (exclude from frontend builds)
 backend/

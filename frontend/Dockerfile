@@ -1,45 +1,56 @@
-# Frontend Dockerfile
+# Frontend Dockerfile - Production Build
+# Multi-stage build for optimal image size
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files for dependency installation
 COPY package*.json ./
 
-# Install all dependencies (including dev dependencies needed for build)
-# Don't set NODE_ENV=production yet as it would skip devDependencies
+# Install ALL dependencies (dev dependencies needed for Vite build)
 RUN npm ci
 
-# Copy all source files and configs needed for build
-COPY . .
+# Copy source files (context is project root)
+# Include all frontend-related files
+COPY index.html ./
+COPY index.tsx ./
+COPY App.tsx ./
+COPY index.css ./
+COPY vite.config.ts ./
+COPY tsconfig.json ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+COPY types.ts ./
+COPY components/ ./components/
+COPY features/ ./features/
+COPY services/ ./services/
+COPY store/ ./store/
 
-# Verify critical files exist
-RUN ls -la && \
-    test -f vite.config.ts && \
-    test -f tsconfig.json && \
-    test -f index.html && \
-    echo "All required files present"
+# Build the application
+# Vite will output to /app/dist by default
+RUN npm run build && ls -la dist/
 
-# Build for production (increase Node memory limit if needed)
-ENV NODE_ENV=production
-ENV NODE_OPTIONS=--max_old_space_size=2048
-RUN npm run build
-
-# Production stage with nginx
+# ===== Production Stage =====
 FROM nginx:alpine
 
-# Copy custom nginx config
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Copy custom nginx configuration
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built files
+# Copy built static files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port
+# Verify files were copied
+RUN ls -la /usr/share/nginx/html
+
+# Expose HTTP port
 EXPOSE 80
 
-# Health check
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
-# Start nginx
+# Run nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]

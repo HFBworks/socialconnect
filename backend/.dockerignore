@@ -2,10 +2,12 @@
 node_modules
 npm-debug.log
 yarn-error.log
+package-lock.json
 
 # Environment files
 .env
-.env.local
+.env.*
+!.env.example
 
 # Build outputs
 dist
@@ -13,10 +15,13 @@ dist
 # Git
 .git
 .gitignore
+.github
 
 # IDE
 .vscode
 .idea
+*.swp
+*.swo
 
 # Logs
 logs
@@ -24,10 +29,21 @@ logs
 
 # Testing
 coverage
+__tests__
+*.test.ts
+*.spec.ts
 
 # Database
 *.db
 *.db-journal
+prisma/*.db
 
 # Misc
 .DS_Store
+*.md
+!README.md
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
