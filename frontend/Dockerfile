@@ -3,16 +3,20 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Set production environment
+ENV NODE_ENV=production
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install all dependencies (including dev dependencies needed for build)
 RUN npm ci
 
 # Copy source code
 COPY . .
 
-# Build for production
+# Build for production (increase Node memory limit if needed)
+ENV NODE_OPTIONS=--max_old_space_size=2048
 RUN npm run build
 
 # Production stage with nginx
