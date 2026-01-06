@@ -10,8 +10,15 @@ COPY package*.json ./
 # Don't set NODE_ENV=production yet as it would skip devDependencies
 RUN npm ci
 
-# Copy source code
+# Copy all source files and configs needed for build
 COPY . .
+
+# Verify critical files exist
+RUN ls -la && \
+    test -f vite.config.ts && \
+    test -f tsconfig.json && \
+    test -f index.html && \
+    echo "All required files present"
 
 # Build for production (increase Node memory limit if needed)
 ENV NODE_ENV=production
