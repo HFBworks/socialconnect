@@ -1,49 +1,31 @@
-# Backend Dockerfile - Production Build
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-# Copy package files and prisma schema
-COPY package*.json ./
-COPY prisma ./prisma/
-
-# Install dependencies
-RUN npm ci
-
-# Copy source code
-COPY . .
-
-# Generate Prisma Client
-RUN npx prisma generate
-
-# Build TypeScript to JavaScript
-RUN npm run build
-
-# ===== Production Stage =====
-FROM node:18-alpine
+# Backend Dockerfile - Simplified Production Build
+FROM node:20-alpine
 
 # Install wget for healthcheck
 RUN apk add --no-cache wget
 
 WORKDIR /app
 
-# Copy package files and prisma schema
+# Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install ONLY production dependencies
-RUN npm ci --only=production
+# Install dependencies (includes Prisma)
+RUN npm install --omit=dev && npm cache clean --force
 
-# Regenerate Prisma Client in production stage
+# Generate Prisma Client
 RUN npx prisma generate
 
-# Copy built JavaScript from builder
-COPY --from=builder /app/dist ./dist
+# Copy source code
+COPY . .
+
+# Build TypeScript to JavaScript
+RUN npm run build
 
 # Expose backend port
 EXPOSE 3001
 
-# Improved healthcheck using wget (works in Alpine)
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1
 
